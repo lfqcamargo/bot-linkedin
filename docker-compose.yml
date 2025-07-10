@@ -14,14 +14,14 @@
 #     volumes:
 #       - ./data_test/pg:/data/postgres_test
 
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
     container_name: jobs-pg
     image: postgres
     ports:
-      - 5432:5432
+      - 5439:5432
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin

@@ -84,6 +84,11 @@ class UsersRepository(UsersRepositoryInterface):
                 session.rollback()
                 print(f"Error during user deletion: {e}")
                 return False
+            
+    def find_by_user_id(self, user_id: str) -> Optional[User]:
+        with self.__db_connection as database:
+            session: Session = cast(Session, database.session)
+            return session.query(User).filter_by(id=user_id).first()
 
     def find_by_email(self, email: str) -> Optional[User]:
         with self.__db_connection as database:

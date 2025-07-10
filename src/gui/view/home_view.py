@@ -3,6 +3,7 @@ from tkinter import messagebox
 from src.composer.fetch_all_users_composer import fetch_all_users_composer
 from src.composer.delete_user_composer import delete_user_composer
 from src.gui.view.create_user_view import CreateUserView
+from src.composer.run_linkedin_bot_composer import run_linkedin_bot_composer
 
 # Definindo tema global e cor de destaque
 ctk.set_appearance_mode("dark")  # ou "light" se preferir
@@ -157,4 +158,40 @@ class HomeView(ctk.CTkFrame):
             self.__update_list_users()
 
     def run_bot(self):
-        messagebox.showinfo("Bot", "Bot será implementado futuramente.")
+        users = fetch_all_users_composer().handle()
+
+        if not users:
+            messagebox.showinfo("Aviso", "Nenhum usuário cadastrado.")
+            return
+
+        modal = ctk.CTkToplevel(self)
+        modal.title("Selecionar Usuário para Rodar o Bot")
+        modal.geometry("400x300")
+        modal.transient(self)
+        modal.grab_set()
+
+        label = ctk.CTkLabel(modal, text="Selecione um usuário:", font=("Arial", 16, "bold"))
+        label.pack(pady=10)
+
+        # Mapeia nomes para objetos do usuário
+        user_names = [f"{u['name']} ({u['email']})" for u in users]
+        user_map = {f"{u['name']} ({u['email']})": u for u in users}
+
+        selected_user = ctk.StringVar(value=user_names[0])
+
+        option_menu = ctk.CTkOptionMenu(modal, values=user_names, variable=selected_user, width=300)
+        option_menu.pack(pady=15)
+
+        def confirmar():
+            user_selected = user_map[selected_user.get()]
+            try:
+                # Envia apenas o ID do usuário
+                run_linkedin_bot_composer().handle({"id": user_selected["id"]})
+                messagebox.showinfo("Bot Rodando", f"O bot foi iniciado para o usuário {user_selected['name']}!")
+            except Exception as e:
+                messagebox.showerror("Erro", f"Ocorreu um erro ao rodar o bot:\n{e}")
+            modal.destroy()
+
+        btn_confirmar = ctk.CTkButton(modal, text="✅ Rodar Bot", command=confirmar, fg_color="#1cc88a", hover_color="#17a673")
+        btn_confirmar.pack(pady=15)
+

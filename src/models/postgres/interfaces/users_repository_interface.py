@@ -34,6 +34,10 @@ class UsersRepositoryInterface(ABC):
     @abstractmethod
     def delete(self, user_id: int) -> bool:
         pass
+    
+    @abstractmethod
+    def find_by_user_id(self, user_id: int) -> Optional[User]:
+        pass
 
     @abstractmethod
     def find_by_email(self, email: str) -> Optional[User]:

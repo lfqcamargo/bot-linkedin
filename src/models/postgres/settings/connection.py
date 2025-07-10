@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from .configs import database_configs
 
@@ -18,6 +18,9 @@ class DBConnectionHandler:
         if self.__engine is None:
             self.__engine = create_engine(self.__connection_string)
             self.Session = sessionmaker(bind=self.__engine)
+            
+            with self.__engine.connect() as conn:
+                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             print("Engine criado:", self.__engine)
 
     def get_engine(self):

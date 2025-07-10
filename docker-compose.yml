@@ -19,7 +19,7 @@ version: "3.8"
 services:
   postgres:
     container_name: jobs-pg
-    image: postgres
+    image: ankane/pgvector:latest
     ports:
       - 5439:5432
     environment:

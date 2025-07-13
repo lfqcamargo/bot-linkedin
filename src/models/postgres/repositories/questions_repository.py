@@ -82,7 +82,7 @@ class QuestionsRepository:
         self,
         question_id: int,
         user_id: int,
-        question_type: str,
+        question_type: QuestionTypes,
         question: str,
         response: str = None,
     ):

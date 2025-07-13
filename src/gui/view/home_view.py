@@ -1,8 +1,9 @@
 from tkinter import messagebox
 import customtkinter as ctk
-from src.gui.view.user_view import UserView
 from src.controllers.users_controller import UsersController
 from src.controllers.run_linkedin_bot_controller import RunLinkedinBotController
+from src.gui.view.user_view import UserView
+from src.gui.view.question_view import QuestionView
 
 
 class HomeView(ctk.CTkFrame):
@@ -18,11 +19,6 @@ class HomeView(ctk.CTkFrame):
         self.__create_header()
         self.__card_list_users()
         self.__create_footer()
-
-    def edit_user(self, user: dict) -> None:
-        screen = UserView(self, user=user)
-        self.wait_window(screen)
-        self.__update_list_users()
 
     def delete_user(self, user: dict) -> None:
         if messagebox.askyesno(
@@ -266,7 +262,7 @@ class HomeView(ctk.CTkFrame):
                 fg_color="#f5a623",
                 hover_color="#c4871d",
                 **button_style,
-                # command=lambda u=user: self.open_questions(u),
+                command=lambda u=user: self.__open_questions(u),
             ).pack(side="left", padx=8)
 
             ctk.CTkButton(
@@ -290,5 +286,15 @@ class HomeView(ctk.CTkFrame):
 
     def __create_user(self) -> None:
         screen = UserView(self)
+        self.wait_window(screen)
+        self.__update_list_users()
+
+    def __open_questions(self, user) -> None:
+        screen = QuestionView(self, user_id=user.id)
+        self.wait_window(screen)
+        self.__update_list_users()
+
+    def edit_user(self, user: dict) -> None:
+        screen = UserView(self, user=user)
         self.wait_window(screen)
         self.__update_list_users()

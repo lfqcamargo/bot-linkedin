@@ -1,12 +1,14 @@
 from src.models.postgres.entities.user import User
-from src.models.postgres.interfaces.users_repository_interface import UsersRepositoryInterface
 from sqlalchemy.orm import Session
 from typing import cast, List, Optional
 import datetime
 
-class UsersRepository(UsersRepositoryInterface):
-    def __init__(self, db_connection):
-        self.__db_connection = db_connection
+from src.models.postgres.settings.connection import db_connection_handler
+
+
+class UsersRepository:
+    def __init__(self):
+        self.__db_connection = db_connection_handler
 
     def create(
         self,
@@ -15,7 +17,7 @@ class UsersRepository(UsersRepositoryInterface):
         password: str,
         birthday_date: datetime.date,
         curriculum: bytes,
-        phone: str
+        phone: str,
     ) -> User:
         with self.__db_connection as database:
             session: Session = cast(Session, database.session)
@@ -25,7 +27,7 @@ class UsersRepository(UsersRepositoryInterface):
                 password=password,
                 birthday_date=birthday_date,
                 curriculum=curriculum,
-                phone=phone
+                phone=phone,
             )
             try:
                 session.add(user)
@@ -44,9 +46,8 @@ class UsersRepository(UsersRepositoryInterface):
         email: str,
         password: str,
         birthday_date: datetime.date,
+        phone: str,
         curriculum: bytes,
-        country_code: str,
-        phone: str
     ) -> bool:
         with self.__db_connection as database:
             session: Session = cast(Session, database.session)
@@ -59,7 +60,6 @@ class UsersRepository(UsersRepositoryInterface):
             db_user.password = password
             db_user.birthday_date = birthday_date
             db_user.curriculum = curriculum
-            db_user.country_code = country_code
             db_user.phone = phone
 
             try:
@@ -84,7 +84,7 @@ class UsersRepository(UsersRepositoryInterface):
                 session.rollback()
                 print(f"Error during user deletion: {e}")
                 return False
-            
+
     def find_by_user_id(self, user_id: str) -> Optional[User]:
         with self.__db_connection as database:
             session: Session = cast(Session, database.session)

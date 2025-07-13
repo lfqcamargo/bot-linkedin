@@ -31,6 +31,7 @@ class QuestionTypes(Enum):
     RADIO = "radio"
     SELECT = "select"
     TEXTAREA = "textarea"
+    SELECT_ONE = "select-one"
 
 
 class Question(Base):

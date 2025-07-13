@@ -18,7 +18,7 @@ class DBConnectionHandler:
         if self.__engine is None:
             self.__engine = create_engine(self.__connection_string)
             self.Session = sessionmaker(bind=self.__engine)
-            
+
             with self.__engine.connect() as conn:
                 conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             print("Engine criado:", self.__engine)

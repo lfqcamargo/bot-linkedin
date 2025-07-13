@@ -1,165 +1,49 @@
-import customtkinter as ctk
 from tkinter import messagebox
-from src.composer.fetch_all_users_composer import fetch_all_users_composer
-from src.composer.delete_user_composer import delete_user_composer
-from src.gui.view.create_user_view import CreateUserView
-from src.composer.run_linkedin_bot_composer import run_linkedin_bot_composer
+import customtkinter as ctk
+from src.gui.view.user_view import UserView
+from src.controllers.users_controller import UsersController
+from src.controllers.run_linkedin_bot_controller import RunLinkedinBotController
 
-# Definindo tema global e cor de destaque
-ctk.set_appearance_mode("dark")  # ou "light" se preferir
-ctk.set_default_color_theme("blue")
 
 class HomeView(ctk.CTkFrame):
-    def __init__(self, master):
+    def __init__(self, master) -> None:
         super().__init__(master)
-        self.configure(corner_radius=20, fg_color=("#f5f6fa", "#23272e"))
-        self.pack(fill="both", expand=True, padx=30, pady=30)
 
-        self.label_title = ctk.CTkLabel(
-            self,
-            text="Bem-vindo!",
-            font=("Arial", 28, "bold"),
-            text_color=("#222", "#fff")
-        )
-        self.label_title.pack(pady=(10, 25))
+        self.__users_controller = UsersController()
+        self.__bot_controller = RunLinkedinBotController()
 
-        self.frame_top = ctk.CTkFrame(self, corner_radius=15, fg_color=("#e3e6f0", "#2c2f36"))
-        self.frame_top.pack(fill="x", padx=10, pady=5)
+        self.configure(corner_radius=20, fg_color=("#23272e", "#23272e"))
+        self.pack(fill="both", expand=True, padx=0, pady=0)
 
-        self.btn_create_user = ctk.CTkButton(
-            self.frame_top,
-            text="➕ Cadastrar Usuário",
-            command=self.create_user,
-            width=180,
-            height=38,
-            font=("Arial", 14, "bold"),
-            fg_color="#4e73df",
-            hover_color="#2e59d9",
-            corner_radius=10
-        )
-        self.btn_create_user.pack(side="left", padx=8, pady=8)
+        self.__create_header()
+        self.__card_list_users()
+        self.__create_footer()
 
-        self.btn_run_bot = ctk.CTkButton(
-            self.frame_top,
-            text="🤖 Rodar Bot",
-            command=self.run_bot,
-            width=140,
-            height=38,
-            font=("Arial", 14, "bold"),
-            fg_color="#1cc88a",
-            hover_color="#17a673",
-            corner_radius=10
-        )
-        self.btn_run_bot.pack(side="left", padx=8, pady=8)
-
-        # Separador visual
-        ctk.CTkLabel(self, text="", height=2, fg_color=("#d1d3e2", "#393e46")).pack(fill="x", padx=10, pady=(18, 0))
-
-        self.label_users = ctk.CTkLabel(
-            self,
-            text="Usuários cadastrados:",
-            font=("Arial", 18, "bold"),
-            text_color=("#222", "#fff")
-        )
-        self.label_users.pack(pady=(18, 8))
-
-        self.frame_lista = ctk.CTkFrame(self, corner_radius=15, fg_color=("#fff", "#23272e"))
-        self.frame_lista.pack(padx=10, pady=5, fill="both", expand=True)
-
-        self.__update_list_users()
-
-    def __update_list_users(self):
-        for widget in self.frame_lista.winfo_children():
-            widget.destroy()
-
-        users = fetch_all_users_composer().handle()
-
-        if users:
-            header = ctk.CTkLabel(
-                self.frame_lista,
-                text="Nome | Email | Telefone",
-                font=("Arial", 13, "bold"),
-                text_color=("#4e73df", "#4e73df")
-            )
-            header.grid(row=0, column=0, columnspan=3, sticky="w", padx=10, pady=6)
-
-            for idx, user in enumerate(users, start=1):
-                name = user.get("name", "")
-                email = user.get("email", "")
-                phone = user.get("phone", "")
-
-                bg = "#f8f9fc" if idx % 2 == 0 else "#e3e6f0"
-                bg_dark = "#23272e" if idx % 2 == 0 else "#2c2f36"
-
-                info = f"{name} | {email} | {phone}"
-                label = ctk.CTkLabel(
-                    self.frame_lista,
-                    text=info,
-                    font=("Consolas", 12),
-                    anchor="w",
-                    fg_color=(bg, bg_dark),
-                    corner_radius=8,
-                    width=320
-                )
-                label.grid(row=idx, column=0, sticky="w", padx=10, pady=3)
-
-                btn_edit = ctk.CTkButton(
-                    self.frame_lista,
-                    text="✏️ Editar",
-                    width=80,
-                    height=30,
-                    font=("Arial", 12, "bold"),
-                    fg_color="#36b9cc",
-                    hover_color="#258fa3",
-                    corner_radius=8,
-                    command=lambda u=user: self.edit_user(u)
-                )
-                btn_edit.grid(row=idx, column=1, padx=4, pady=3)
-
-                btn_del = ctk.CTkButton(
-                    self.frame_lista,
-                    text="🗑️ Remover",
-                    width=100,
-                    height=30,
-                    font=("Arial", 12, "bold"),
-                    fg_color="#e74a3b",
-                    hover_color="#be2617",
-                    corner_radius=8,
-                    command=lambda u=user: self.delete_user(u)
-                )
-                btn_del.grid(row=idx, column=2, padx=4, pady=3)
-        else:
-            label = ctk.CTkLabel(
-                self.frame_lista,
-                text="Nenhum usuário cadastrado.",
-                font=("Consolas", 13),
-                text_color="#888"
-            )
-            label.pack(pady=18)
-
-    def create_user(self):
-        screen = CreateUserView(self)
+    def edit_user(self, user: dict) -> None:
+        screen = UserView(self, user=user)
         self.wait_window(screen)
         self.__update_list_users()
 
-    def edit_user(self, user: dict):
-        screen = CreateUserView(self, user=user)
-        self.wait_window(screen)
-        self.__update_list_users()
-
-    def delete_user(self, user: dict):
-        if messagebox.askyesno("Remover Usuário", f"Tem certeza que deseja remover o usuário '{user.get('name', '')}'?"):
+    def delete_user(self, user: dict) -> None:
+        if messagebox.askyesno(
+            "Remover Usuário",
+            f"Tem certeza que deseja remover o usuário '{user.name}'?",
+        ):
             try:
-                delete_user_composer().handle({"id": user["id"]})
-                messagebox.showinfo("Removido", f"Usuário '{user.get('name', '')}' removido com sucesso!")
+                self.__users_controller.delete({"id": user.id})
+                messagebox.showinfo(
+                    "Removido",
+                    f"Usuário '{user.name}' removido com sucesso!",
+                )
             except Exception as e:
                 messagebox.showerror("Erro", f"Erro inesperado: {e}", parent=self)
-
             self.__update_list_users()
 
-    def run_bot(self):
-        users = fetch_all_users_composer().handle()
+    def questions(self, user: dict) -> None:
+        pass
 
+    def run_bot(self):
+        users = self.__users_controller.fetch_all_users()
         if not users:
             messagebox.showinfo("Aviso", "Nenhum usuário cadastrado.")
             return
@@ -170,28 +54,241 @@ class HomeView(ctk.CTkFrame):
         modal.transient(self)
         modal.grab_set()
 
-        label = ctk.CTkLabel(modal, text="Selecione um usuário:", font=("Arial", 16, "bold"))
+        label = ctk.CTkLabel(
+            modal, text="Selecione um usuário:", font=("Arial", 16, "bold")
+        )
         label.pack(pady=10)
 
-        # Mapeia nomes para objetos do usuário
-        user_names = [f"{u['name']} ({u['email']})" for u in users]
-        user_map = {f"{u['name']} ({u['email']})": u for u in users}
+        # Acessa propriedades com ponto agora
+        user_names = [f"{u.name} ({u.email})" for u in users]
+        user_map = {f"{u.name} ({u.email})": u for u in users}
 
         selected_user = ctk.StringVar(value=user_names[0])
-
-        option_menu = ctk.CTkOptionMenu(modal, values=user_names, variable=selected_user, width=300)
+        option_menu = ctk.CTkOptionMenu(
+            modal, values=user_names, variable=selected_user, width=300
+        )
         option_menu.pack(pady=15)
 
         def confirmar():
             user_selected = user_map[selected_user.get()]
             try:
-                # Envia apenas o ID do usuário
-                run_linkedin_bot_composer().handle({"id": user_selected["id"]})
-                messagebox.showinfo("Bot Rodando", f"O bot foi iniciado para o usuário {user_selected['name']}!")
+                self.__bot_controller.handle({"id": user_selected.id})
+                messagebox.showinfo(
+                    "Bot Rodando",
+                    f"O bot foi iniciado para o usuário {user_selected.name}!",
+                )
             except Exception as e:
                 messagebox.showerror("Erro", f"Ocorreu um erro ao rodar o bot:\n{e}")
             modal.destroy()
 
-        btn_confirmar = ctk.CTkButton(modal, text="✅ Rodar Bot", command=confirmar, fg_color="#1cc88a", hover_color="#17a673")
+        btn_confirmar = ctk.CTkButton(
+            modal,
+            text="✅ Rodar Bot",
+            command=confirmar,
+            fg_color="#1cc88a",
+            hover_color="#17a673",
+        )
         btn_confirmar.pack(pady=15)
 
+    def __create_header(self) -> None:
+        self.header = ctk.CTkFrame(self, fg_color="#23272e", corner_radius=0)
+        self.header.pack(fill="x", pady=(0, 0))
+        ctk.CTkLabel(
+            self.header,
+            text="🤖 Bot de Empregos",
+            font=("Arial", 32, "bold"),
+            text_color="#4e73df",
+        ).pack(side="left", padx=(40, 18), pady=(18, 10))
+        ctk.CTkLabel(
+            self.header,
+            text="Bem-vindo ao painel de gestão!",
+            font=("Arial", 18),
+            text_color="#fff",
+        ).pack(side="left", pady=(18, 10))
+
+        self.frame_top = ctk.CTkFrame(
+            self, corner_radius=15, fg_color=("#2c2f36", "#2c2f36")
+        )
+        self.frame_top.pack(fill="x", padx=40, pady=(10, 18))
+        self.btn_create_user = ctk.CTkButton(
+            self.frame_top,
+            text="➕ Cadastrar Usuário",
+            command=self.__create_user,
+            width=200,
+            height=44,
+            font=("Arial", 15, "bold"),
+            fg_color="#4e73df",
+            hover_color="#2e59d9",
+            corner_radius=12,
+        )
+        self.btn_create_user.pack(side="left", padx=12, pady=12)
+        self.btn_run_bot = ctk.CTkButton(
+            self.frame_top,
+            text="🤖 Rodar Bot",
+            command=self.run_bot,
+            width=160,
+            height=44,
+            font=("Arial", 15, "bold"),
+            fg_color="#1cc88a",
+            hover_color="#17a673",
+            corner_radius=12,
+        )
+        self.btn_run_bot.pack(side="left", padx=12, pady=12)
+
+    def __card_list_users(self) -> None:
+        self.card_list = ctk.CTkFrame(
+            self, corner_radius=18, fg_color=("#fff", "#23272e")
+        )
+        self.card_list.pack(padx=40, pady=(24, 10), fill="both", expand=True)
+
+        self.label_users = ctk.CTkLabel(
+            self.card_list,
+            text="Usuários Cadastrados",
+            font=("Arial", 24, "bold"),
+            text_color=("#222", "#fff"),
+        )
+        self.label_users.pack(pady=(18, 8))
+
+        self.users_list_frame = ctk.CTkFrame(
+            self.card_list, corner_radius=15, fg_color=("#f5f6fa", "#23272e")
+        )
+        self.users_list_frame.pack(padx=10, pady=5, fill="both", expand=True)
+
+        self.__update_list_users()
+
+    def __update_list_users(self) -> None:
+        # Limpa a lista atual
+        for widget in self.users_list_frame.winfo_children():
+            widget.destroy()
+
+        # Configura colunas do container principal
+        self.users_list_frame.grid_columnconfigure(0, weight=2)
+        self.users_list_frame.grid_columnconfigure(1, weight=3)
+        self.users_list_frame.grid_columnconfigure(2, weight=2)
+        self.users_list_frame.grid_columnconfigure(3, weight=1)
+
+        # Cabeçalho
+        ctk.CTkLabel(
+            self.users_list_frame,
+            text="Nome",
+            font=("Arial", 14, "bold"),
+            text_color="#4e73df",
+            anchor="w",
+        ).grid(row=0, column=0, padx=10, pady=6, sticky="w")
+
+        ctk.CTkLabel(
+            self.users_list_frame,
+            text="Email",
+            font=("Arial", 14, "bold"),
+            text_color="#4e73df",
+            anchor="w",
+        ).grid(row=0, column=1, padx=10, pady=6, sticky="w")
+
+        ctk.CTkLabel(
+            self.users_list_frame,
+            text="Telefone",
+            font=("Arial", 14, "bold"),
+            text_color="#4e73df",
+            anchor="w",
+        ).grid(row=0, column=2, padx=10, pady=6, sticky="w")
+
+        # Cabeçalho "Ações" dentro de um frame, só texto, centralizado
+        actions_header_frame = ctk.CTkFrame(
+            self.users_list_frame, fg_color="transparent"
+        )
+        actions_header_frame.grid(
+            row=0, column=3, padx=10, pady=6, sticky="e"
+        )  # fixa à direita
+
+        ctk.CTkLabel(
+            actions_header_frame,
+            text="Ações",
+            font=("Arial", 14, "bold"),
+            text_color="#4e73df",
+            anchor="e",  # alinhamento do texto à direita
+        ).pack(fill="x")
+
+        # Lista de usuários
+        users = self.__users_controller.fetch_all_users()
+
+        for i, user in enumerate(users, start=1):
+            # Nome
+            ctk.CTkLabel(
+                self.users_list_frame,
+                text=user.name or "—",
+                font=("Arial", 13),
+                text_color=("#23272e", "#fff"),
+                anchor="w",
+            ).grid(row=i, column=0, padx=10, pady=4, sticky="w")
+
+            # Email
+            ctk.CTkLabel(
+                self.users_list_frame,
+                text=user.email or "—",
+                font=("Arial", 13),
+                text_color=("#23272e", "#fff"),
+                anchor="w",
+            ).grid(row=i, column=1, padx=10, pady=4, sticky="w")
+
+            # Telefone
+            ctk.CTkLabel(
+                self.users_list_frame,
+                text=user.phone or "—",
+                font=("Arial", 13),
+                text_color=("#23272e", "#fff"),
+                anchor="w",
+            ).grid(row=i, column=2, padx=10, pady=4, sticky="w")
+
+            # Ações (botões)
+            actions_frame = ctk.CTkFrame(self.users_list_frame, fg_color="transparent")
+            actions_frame.grid(row=i, column=3, padx=10, pady=4, sticky="e")
+
+            button_style = dict(
+                width=42,
+                height=38,
+                font=("Arial", 15, "bold"),
+                corner_radius=14,
+                border_width=0,
+            )
+
+            ctk.CTkButton(
+                actions_frame,
+                text="✏️",
+                fg_color="#4a90e2",
+                hover_color="#357ABD",
+                **button_style,
+                command=lambda u=user: self.edit_user(u),
+            ).pack(side="left", padx=8)
+
+            ctk.CTkButton(
+                actions_frame,
+                text="❓",
+                fg_color="#f5a623",
+                hover_color="#c4871d",
+                **button_style,
+                # command=lambda u=user: self.open_questions(u),
+            ).pack(side="left", padx=8)
+
+            ctk.CTkButton(
+                actions_frame,
+                text="🗑️",
+                fg_color="#e94e3d",
+                hover_color="#b33021",
+                **button_style,
+                command=lambda u=user: self.delete_user(u),
+            ).pack(side="left", padx=8)
+
+    def __create_footer(self) -> None:
+        self.footer = ctk.CTkFrame(self, fg_color="transparent")
+        self.footer.pack(fill="x", side="bottom", pady=(0, 8))
+        ctk.CTkLabel(
+            self.footer,
+            text="Desenvolvido por Lucas Fernando Quinato de Camargo • v1.0",
+            font=("Arial", 11, "italic"),
+            text_color="#888",
+        ).pack(side="right", padx=18)
+
+    def __create_user(self) -> None:
+        screen = UserView(self)
+        self.wait_window(screen)
+        self.__update_list_users()
